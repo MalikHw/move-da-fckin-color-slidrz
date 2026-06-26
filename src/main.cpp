@@ -4,7 +4,7 @@
 using namespace geode::prelude;
 
 // yes i had this prob so why not make it to a mod
-class DragHandleItem : public CCMenuItem {
+class DragHandleItem : public CCLayer {
 public:
     ColorSelectLiveOverlay* m_targetLayer;
     CCSprite* m_sprite;
@@ -23,13 +23,15 @@ public:
     }
 
     bool init(CCSprite* sprite) {
-        if (!CCMenuItem::init()) return false;
+        if (!CCLayer::init()) return false;
         m_sprite = sprite;
         m_targetLayer = nullptr;
         m_isDragging = false;
         this->setContentSize(sprite->getContentSize());
         this->addChild(sprite);
         sprite->setPosition(m_obContentSize / 2);
+        this->setTouchEnabled(true);
+        this->setTouchPriority(-128);
         return true;
     }
 
@@ -37,13 +39,15 @@ public:
         m_targetLayer = layer;
     }
 
-    virtual void activate() {}
+    virtual void registerWithTouchDispatcher() {
+        CCDirector::sharedDirector()->getTouchDispatcher()->addTargetedDelegate(this, this->getTouchPriority(), true);
+    }
 
     virtual bool ccTouchBegan(CCTouch* touch, CCEvent* event) {
-        if (!m_bEnabled || !m_bVisible || !m_targetLayer) return false;
+        if (!m_bVisible || !m_targetLayer) return false;
         
-        CCPoint touchPos = this->getParent()->convertTouchToNodeSpace(touch);
-        if (this->boundingBox().containsPoint(touchPos)) {
+        CCPoint touchPos = this->convertTouchToNodeSpace(touch);
+        if (CCRect(CCPointZero, this->getContentSize()).containsPoint(touchPos)) {
             m_startTouchPos = m_targetLayer->convertTouchToNodeSpace(touch);
             m_startLayerPos = m_targetLayer->getPosition();
             m_isDragging = true;
@@ -71,20 +75,18 @@ public:
 
 class $modify(CSLO, ColorSelectLiveOverlay) {
     struct Fields {
-        CCMenu* m_dragMenu;
+        DragHandleItem* m_dragItem;
     };
 
     bool init(ColorAction* baseAction, ColorAction* detailAction, EffectGameObject* object) {
         if (!ColorSelectLiveOverlay::init(baseAction, detailAction, object)) return false;
         
-        m_fields->m_dragMenu = CCMenu::create();
-        m_fields->m_dragMenu->setPosition(ccp(0, 0));
-        this->addChild(m_fields->m_dragMenu, 10);
         auto dragBtn = CCSprite::create("GJ_colorThumbSBtn.png");
         auto dragItem = DragHandleItem::create(dragBtn, this);
         dragItem->setTargetLayer(this);
         dragItem->setPosition(ccp(220, 170));
-        m_fields->m_dragMenu->addChild(dragItem);
+        this->addChild(dragItem, 10);
+        m_fields->m_dragItem = dragItem;
 
         return true;
     }
