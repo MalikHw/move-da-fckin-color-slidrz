@@ -93,8 +93,8 @@ class $modify(HLO, HSVLiveOverlay) {
         DragHandleItem* m_dragItem;
     };
 
-    bool init() {
-        if (!HSVLiveOverlay::init()) return false;
+    bool init(GameObject* object, cocos2d::CCArray* objects) {
+        if (!HSVLiveOverlay::init(object, objects)) return false;
         
         auto dragBtn = CCSprite::create("GJ_colorThumbSBtn.png");
         auto dragItem = DragHandleItem::create(dragBtn, this);

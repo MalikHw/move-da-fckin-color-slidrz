@@ -1,6 +1,8 @@
 ## Color Slider Slider
 Allows you to slide the Color + HSV sliders in the editor!
 
+**Its a bit buggy for now, sorry**
+
 ### Credits:
 - [MalikHw47](https://malikhw.github.io): mod
 - [MalikHw47](https://youtube.com/@MalikHw47): idea
