@@ -5,16 +5,17 @@
 using namespace geode::prelude;
 
 // yes i had this prob so why not make it to a mod
-class DragHandleItem : public CCMenuItemSpriteExtra {
+class DragHandleItem : public CCNode {
 public:
     CCNode* m_targetLayer;
+    CCSprite* m_sprite;
     CCPoint m_startTouchPos;
     CCPoint m_startLayerPos;
     bool m_isDragging;
 
-    static DragHandleItem* create(const char* sprite, CCNode* target) {
+    static DragHandleItem* create(const char* spriteName, CCNode* target) {
         auto ret = new DragHandleItem();
-        if (ret && ret->init(sprite, target)) {
+        if (ret && ret->init(spriteName, target)) {
             ret->autorelease();
             return ret;
         }
@@ -22,19 +23,34 @@ public:
         return nullptr;
     }
 
-    bool init(const char* sprite, CCNode* target) {
-        auto spr = CCSprite::create(sprite);
-        if (!CCMenuItemSpriteExtra::init(spr, spr, nullptr, nullptr)) return false;
+    bool init(const char* spriteName, CCNode* target) {
+        if (!CCNode::init()) return false;
+        
+        m_sprite = CCSprite::create(spriteName);
         m_targetLayer = target;
         m_isDragging = false;
+        
+        this->setContentSize(m_sprite->getContentSize());
+        this->addChild(m_sprite);
+        m_sprite->setPosition(this->getContentSize() / 2);
+        
+        this->setTouchEnabled(true);
         return true;
     }
 
+    virtual void registerWithTouchDispatcher() {
+        CCDirector::sharedDirector()->getTouchDispatcher()->addTargetedDelegate(
+            this,
+            -128,
+            true
+        );
+    }
+
     virtual bool ccTouchBegan(CCTouch* touch, CCEvent* event) {
-        if (!m_bEnabled || !m_bVisible || !m_targetLayer) return false;
+        if (!m_bVisible || !m_targetLayer) return false;
         
-        CCPoint touchPos = this->getParent()->convertTouchToNodeSpace(touch);
-        if (this->boundingBox().containsPoint(touchPos)) {
+        CCPoint touchPos = this->convertTouchToNodeSpace(touch);
+        if (CCRect(CCPointZero, this->getContentSize()).containsPoint(touchPos)) {
             m_startTouchPos = m_targetLayer->convertTouchToNodeSpace(touch);
             m_startLayerPos = m_targetLayer->getPosition();
             m_isDragging = true;
@@ -62,21 +78,15 @@ public:
 
 class $modify(CSLO, ColorSelectLiveOverlay) {
     struct Fields {
-        CCMenu* m_dragMenu;
         DragHandleItem* m_dragItem;
     };
 
     bool init(ColorAction* baseAction, ColorAction* detailAction, EffectGameObject* object) {
         if (!ColorSelectLiveOverlay::init(baseAction, detailAction, object)) return false;
         
-        m_fields->m_dragMenu = CCMenu::create();
-        m_fields->m_dragMenu->setPosition(ccp(0, 0));
-        m_fields->m_dragMenu->setTouchEnabled(true);
-        m_fields->m_dragMenu->setTouchPriority(-128);
-        this->addChild(m_fields->m_dragMenu, 10);
         m_fields->m_dragItem = DragHandleItem::create("GJ_colorThumbSBtn.png", this);
         m_fields->m_dragItem->setPosition(ccp(220, 170));
-        m_fields->m_dragMenu->addChild(m_fields->m_dragItem);
+        this->addChild(m_fields->m_dragItem, 10);
 
         return true;
     }
@@ -84,21 +94,15 @@ class $modify(CSLO, ColorSelectLiveOverlay) {
 
 class $modify(HLO, HSVLiveOverlay) {
     struct Fields {
-        CCMenu* m_dragMenu;
         DragHandleItem* m_dragItem;
     };
 
     bool init(GameObject* object, cocos2d::CCArray* objects) {
         if (!HSVLiveOverlay::init(object, objects)) return false;
         
-        m_fields->m_dragMenu = CCMenu::create();
-        m_fields->m_dragMenu->setPosition(ccp(0, 0));
-        m_fields->m_dragMenu->setTouchEnabled(true);
-        m_fields->m_dragMenu->setTouchPriority(-128);
-        this->addChild(m_fields->m_dragMenu, 10);
         m_fields->m_dragItem = DragHandleItem::create("GJ_colorThumbSBtn.png", this);
         m_fields->m_dragItem->setPosition(ccp(220, 170));
-        m_fields->m_dragMenu->addChild(m_fields->m_dragItem);
+        this->addChild(m_fields->m_dragItem, 10);
 
         return true;
     }
