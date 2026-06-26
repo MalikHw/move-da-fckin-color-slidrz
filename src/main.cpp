@@ -1,20 +1,21 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/ColorSelectLiveOverlay.hpp>
+#include <Geode/modify/HSVLiveOverlay.hpp>
 
 using namespace geode::prelude;
 
 // yes i had this prob so why not make it to a mod
 class DragHandleItem : public CCLayer {
 public:
-    ColorSelectLiveOverlay* m_targetLayer;
+    CCNode* m_targetLayer;
     CCSprite* m_sprite;
     CCPoint m_startTouchPos;
     CCPoint m_startLayerPos;
     bool m_isDragging;
 
-    static DragHandleItem* create(CCSprite* sprite, ColorSelectLiveOverlay* target) {
+    static DragHandleItem* create(CCSprite* sprite, CCNode* target) {
         auto ret = new DragHandleItem();
-        if (ret && ret->init(sprite)) {
+        if (ret && ret->init(sprite, target)) {
             ret->autorelease();
             return ret;
         }
@@ -22,10 +23,10 @@ public:
         return nullptr;
     }
 
-    bool init(CCSprite* sprite) {
+    bool init(CCSprite* sprite, CCNode* target) {
         if (!CCLayer::init()) return false;
         m_sprite = sprite;
-        m_targetLayer = nullptr;
+        m_targetLayer = target;
         m_isDragging = false;
         this->setContentSize(sprite->getContentSize());
         this->addChild(sprite);
@@ -33,10 +34,6 @@ public:
         this->setTouchEnabled(true);
         this->setTouchPriority(-128);
         return true;
-    }
-
-    void setTargetLayer(ColorSelectLiveOverlay* layer) {
-        m_targetLayer = layer;
     }
 
     virtual void registerWithTouchDispatcher() {
@@ -83,7 +80,24 @@ class $modify(CSLO, ColorSelectLiveOverlay) {
         
         auto dragBtn = CCSprite::create("GJ_colorThumbSBtn.png");
         auto dragItem = DragHandleItem::create(dragBtn, this);
-        dragItem->setTargetLayer(this);
+        dragItem->setPosition(ccp(220, 170));
+        this->addChild(dragItem, 10);
+        m_fields->m_dragItem = dragItem;
+
+        return true;
+    }
+};
+
+class $modify(HLO, HSVLiveOverlay) {
+    struct Fields {
+        DragHandleItem* m_dragItem;
+    };
+
+    bool init() {
+        if (!HSVLiveOverlay::init()) return false;
+        
+        auto dragBtn = CCSprite::create("GJ_colorThumbSBtn.png");
+        auto dragItem = DragHandleItem::create(dragBtn, this);
         dragItem->setPosition(ccp(220, 170));
         this->addChild(dragItem, 10);
         m_fields->m_dragItem = dragItem;
