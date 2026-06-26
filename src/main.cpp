@@ -5,7 +5,7 @@
 using namespace geode::prelude;
 
 // yes i had this prob so why not make it to a mod
-class DragHandleItem : public CCNode {
+class DragHandleItem : public CCLayer {
 public:
     CCNode* m_targetLayer;
     CCSprite* m_sprite;
@@ -24,7 +24,7 @@ public:
     }
 
     bool init(const char* spriteName, CCNode* target) {
-        if (!CCNode::init()) return false;
+        if (!CCLayer::init()) return false;
         
         m_sprite = CCSprite::create(spriteName);
         m_targetLayer = target;
@@ -35,13 +35,14 @@ public:
         m_sprite->setPosition(this->getContentSize() / 2);
         
         this->setTouchEnabled(true);
+        this->setTouchPriority(-128);
         return true;
     }
 
     virtual void registerWithTouchDispatcher() {
         CCDirector::sharedDirector()->getTouchDispatcher()->addTargetedDelegate(
             this,
-            -128,
+            this->getTouchPriority(),
             true
         );
     }
