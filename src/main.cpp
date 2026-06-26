@@ -47,15 +47,7 @@ public:
         if (m_isDragging) {
             CCPoint touchPos = m_targetLayer->convertTouchToNodeSpace(touch);
             CCPoint delta = ccpSub(touchPos, m_startTouchPos);
-            CCPoint newPos = ccpAdd(m_startLayerPos, delta);
-
-            CCSize winSize = CCDirector::sharedDirector()->getWinSize();
-            CCSize overlaySize = m_targetLayer->getContentSize();
-            
-            newPos.x = clampf(newPos.x, 0, winSize.width - overlaySize.width);
-            newPos.y = clampf(newPos.y, 0, winSize.height - overlaySize.height);
-            
-            m_targetLayer->setPosition(newPos);
+            m_targetLayer->setPosition(ccpAdd(m_startLayerPos, delta));
         }
     }
 
